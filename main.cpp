@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "spec_mesh.h"
+#include "defs.h"
 
 int main (int argc, char* argv[])
 {
