@@ -5,10 +5,10 @@ task: main.o spec_mesh.o spec_mesh.h defs.h
 	$(CC) -o task main.o spec_mesh.o
 
 main.o: main.cpp spec_mesh.h defs.h
-	$(CC) -c main.cpp
+	$(CC) -c main.cpp -o main.o
 
 spec_mesh.o: spec_mesh.cpp spec_mesh.h
-	$(CC) -c spec_mesh.cpp
+	$(CC) -c spec_mesh.cpp -o spec_mesh.o
 
 clean:
 	rm -f *.o *~ task
