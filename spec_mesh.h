@@ -21,7 +21,7 @@ class spec_mesh
     
     int size ()
       {
-       return (m_M1 + 1) * (m_M2 + 1) - (m_M1 / 5 - 1) * (m_M2 / 4);
+        return (m_M1 + 1) * (m_M2 + 1) - (m_M1 / 5 - 1) * (m_M2 / 4);
       }
     
     int boundary_size ()
@@ -30,4 +30,9 @@ class spec_mesh
       }
       
     void print_properties ();
+    
+    int right (int ind);
+    int left  (int ind);
+    int up    (int ind);
+    int down  (int ind);
 };
