@@ -1,14 +1,169 @@
-CC = g++ $(CFLAGS)
-CFLAGS = -g -pg -O3 -funroll-all-loops -ffast-math
+#
+# set appropriate the following variables in your environment:
+#
+# CC		for the C compiler
+# CFLAGS	for options of CC
+# LDFLAGS	for linker options of CC
+#
 
-task: main.o spec_mesh.o spec_mesh.h defs.h
-	$(CC) -o task main.o spec_mesh.o
+#
+# ARCH_EXT can be used in order to install binaries in different directories
+# depending on the computer architecture,
+# e.g. $(HOME)/lib/sunos for ARCH_EXT = '/sunos'
+#
+#ARCH_EXT	=
 
-main.o: main.cpp spec_mesh.h defs.h
-	$(CC) -c main.cpp -o main.o
+#
+# set the path for the root of the inlude directories here,
+# e.g. /usr/local/include
+#
+INCROOT		= $(HOME)/include
+#
+# set the path for the root of the library directories here,
+# e.g. /usr/local/lib
+#
+LIBROOT		= $(HOME)/lib$(ARCH_EXT)
+#
+# set the destination directory for the executable
+#
+DEST		= $(HOME)/bin$(ARCH_EXT)
 
-spec_mesh.o: spec_mesh.cpp spec_mesh.h
-	$(CC) -c spec_mesh.cpp -o spec_mesh.o
+#
+# the following text was created automaticaly. You should change it carefully.
+#
 
-clean:
-	rm -f *.o *~ task
+SHELL		= /bin/sh
+
+PROGRAM		= task
+
+HDRS		= spec_mesh.h \
+		defs.h
+
+EXTHDRS		=
+
+SRCS		= spec_mesh.c \
+		main.c
+
+OBJS		= main.o \
+		spec_mesh.o
+
+LIBS		=
+
+EXTLIBS		= -llaspack -lxc
+
+COMPFLAGS	=  
+
+# compiler options will be passed throuth enviroment variables
+#CFLAGS		=
+#PFLAGS		=
+#FFLAGS		=
+#CXXFLAGS	=
+
+BINLOCAL	= /usr/local/bin
+
+INSTALL		= mv
+
+LD		= $(CC)
+
+# linker options passed throuth enviroment variables
+#LDFLAGS	=
+
+LINTLIBS	=
+
+LINTFLAGS	= -I$(INCROOT) $(CFLAGS)
+
+MAKEFILE	= Makefile
+
+PRINT		= pr
+
+PRINTFLAGS	=
+
+LP		= lp
+
+LPFLAGS		= 
+
+all:		$(PROGRAM)
+
+clean:;		@rm -f $(OBJS) core
+
+clobber:;	@rm -f $(OBJS) $(PROGRAM) core tags
+		@if [ -f compllist ]; then rm -f compllist; fi
+		@if [ -f cleanlist ]; then rm -f cleanlist; fi
+		@find . -type f -print > compllist
+		@sed -n \
+			-e "/~/ w cleanlist" \
+			-e '/%/ w cleanlist' \
+			-e '/.bak/ w cleanlist' \
+			-e '/.obj/ w cleanlist' \
+			-e '/.exe/ w cleanlist' \
+			-e '/.aux/ w cleanlist' \
+			-e '/.blg/ w cleanlist' \
+			-e '/.dvi/ w cleanlist' \
+			-e '/.glo/ w cleanlist' \
+			-e '/.idx/ w cleanlist' \
+			-e '/.ilg/ w cleanlist' \
+			-e '/.ind/ w cleanlist' \
+			-e '/.lof/ w cleanlist' \
+			-e '/.log/ w cleanlist' \
+			-e '/.lot/ w cleanlist' \
+			-e '/.toc/ w cleanlist' \
+			compllist
+		@rm -f `cat cleanlist`
+		@rm -f compllist
+		@rm -f cleanlist
+		
+depend:;	@mkmf -f $(MAKEFILE)
+
+echo:;		@echo $(HDRS) $(SRCS)
+
+index:;		@ctags -wx $(HDRS) $(SRCS)
+
+install:	$(PROGRAM)
+		@echo Installing $(PROGRAM) in $(DEST)
+		@strip $(PROGRAM)
+		@if [ $(DEST) != . ]; then rm -f $(DEST)/$(PROGRAM); fi
+		@if [ $(DEST) != . ]; then $(INSTALL) -f $(PROGRAM) $(DEST); fi
+
+install-local:	$(PROGRAM)
+		@echo Installing $(PROGRAM) in $(BINLOCAL)
+		@strip $(PROGRAM)
+		@rm -f $(BINLOCAL)/$(PROGRAM).old
+		@if [ -f $(BINLOCAL)/$(PROGRAM) ]; then \
+			mv $(BINLOCAL)/$(PROGRAM) $(BINLOCAL)/$(PROGRAM).old; \
+		fi
+		@$(INSTALL) -f $(PROGRAM) $(BINLOCAL)
+		@chmod 755 $(BINLOCAL)/$(PROGRAM)
+
+lint:		$(LINTLIBS) $(HDRS) $(EXTHDRS) $(SRCS)
+		@$(LINT) $(LINTFLAGS) $(LINTLIBS) $(SRCS)
+
+print:;		@$(PRINT) $(PRINTFLAGS) $(HDRS) $(SRCS) | $(LP) $(LPFLAGS)
+
+tags:           $(HDRS) $(SRCS) 
+		@ctags $(HDRS) $(SRCS)
+
+touch:;		@touch $(HDRS) $(SRCS) $(MAKEFILE)
+
+update:		$(DEST)/$(PROGRAM)
+
+d2u:;		@d2u $(HDRS) $(SRCS)
+ 
+c:;		@$(MAKE) -f $(MAKEFILE) clean
+cl:;		@$(MAKE) -f $(MAKEFILE) clobber
+i:;             @$(MAKE) -f $(MAKEFILE) install
+il:;		@$(MAKE) -f $(MAKEFILE) install-local
+l:;		@$(MAKE) -f $(MAKEFILE) lint
+t:;		@$(MAKE) -f $(MAKEFILE) touch
+u:;		@$(MAKE) -f $(MAKEFILE) update 
+
+$(PROGRAM):     $(OBJS) $(LIBS) $(MAKEFILE)
+		@echo "Linking $(PROGRAM) ..."
+		@$(LD) $(COMPFLAGS) $(OBJS) $(LIBS) -o $(PROGRAM) \
+			-L$(LIBROOT) $(EXTLIBS) $(LDFLAGS) -lm
+
+$(DEST)/$(PROGRAM):  $(HDRS) $(EXTHDRS) $(SRCS) $(LIBS) 
+		@$(MAKE) -f $(MAKEFILE) install:
+
+.c.o:;		$(CC) -I$(INCROOT) $(CFLAGS) $(COMPFLAGS) -c $<
+.p.o:;		pc $(PFLAGS) $(COMPFLAGS) -c $<
+.f.o:;		f77 $(FFLAGS) $(COMPFLAGS) -c $<
