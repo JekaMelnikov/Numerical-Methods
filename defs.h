@@ -1,9 +1,13 @@
 #include <math.h>
 
-#define VISC    0.01
-#define PP      10
+#define MINIMAL_FOR_COMPARE  1.e-12
+
+#define VISC      0.01
+#define PP        10
+#define MAX_ITER  1000
+
 #ifndef PI
-#define PI 3.141592653589793
+#define PI      3.141592653589793
 #endif
 
 double debug_rho (double t, double x, double y)

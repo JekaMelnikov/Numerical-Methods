@@ -1,13 +1,8 @@
 #include <stdio.h>
 
-#include <laspack/errhandl.h>
 #include <laspack/vector.h>
 #include <laspack/qmatrix.h>
-#include <laspack/operats.h>
-#include <laspack/version.h>
-#include <laspack/copyrght.h>
-
-#include <xc/getopts.h>
+#include <laspack/itersolv.h>
 
 #include "spec_mesh.h"
 #include "defs.h"
@@ -38,6 +33,16 @@ void init (Vector *u, spec_mesh mesh)
       }
 }
 
+void create_system (spec_mesh mesh, Vector u, QMatrix *A, Vector *b)
+{
+  return;
+}
+
+void rezidual (spec_mesh mesh, Vector u)
+{
+  return;
+}
+
 int main (int argc, char* argv[])
 {
   FILE *file = fopen (argv[1], "r");
@@ -60,8 +65,29 @@ int main (int argc, char* argv[])
   V_Constr (&u, "u", 3 * size (mesh), Normal, True);
   init (&u, mesh);
   
+  QMatrix A;
+  Q_Constr(&A, "A", 3 * size (mesh), False, Rowws, Normal, True);
+  Vector b;
+  V_Constr (&b, "b", 3 * size (mesh), Normal, True);
   
+  double cur_T = 0.0;
+  while (T - cur_T > MINIMAL_FOR_COMPARE) /// main loop
+    {
+      cur_T += tau;
+      
+      /// fill matrix A and vector b
+      create_system (mesh, u, &A, &b);
+      
+      /// solve Au = b
+      BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
+      
+      printf ("\nt = %.3lf\n", cur_T);
+      /// calculate and print rezidual
+      rezidual (mesh, u);
+    }
   
+  Q_Destr (&A);
   V_Destr (&u);
+  V_Destr (&b);
   return 0;
 }
