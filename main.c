@@ -45,11 +45,17 @@ void rezidual (spec_mesh mesh, Vector u)
 
 int main (int argc, char* argv[])
 {
+  if (argc != 2)
+    {
+      printf ("Usage %s <input_file>\n", argv[0]);
+      return -1;
+    }
+  
   FILE *file = fopen (argv[1], "r");
   if (!file)
     {
-      printf ("Cant open initialization file.\n");
-      return -1;
+      printf ("Cant open input file %s\n", argv[1]);
+      return -2;
     }
   
   int M1, M2, T;
