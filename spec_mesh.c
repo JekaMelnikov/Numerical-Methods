@@ -1,5 +1,15 @@
 #include "spec_mesh.h"
 
+double get_h1 (spec_mesh mesh)
+{
+  return 1.0 / mesh.M1;
+}
+
+double get_h2 (spec_mesh mesh)
+{
+  return 1.0 / mesh.M2;
+}
+
 void create (spec_mesh *mesh, int M1, int M2)
 {
   mesh->M1 = M1 * 5;

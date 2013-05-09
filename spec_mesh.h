@@ -22,3 +22,6 @@ int get_down  (spec_mesh mesh, int ind);
     
 double get_x (spec_mesh mesh, int ind);
 double get_y (spec_mesh mesh, int ind);
+
+double get_h1 (spec_mesh mesh);
+double get_h2 (spec_mesh mesh);
