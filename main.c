@@ -39,9 +39,34 @@ void create_system (spec_mesh mesh, Vector u, QMatrix *A, Vector *b)
   return;
 }
 
-void rezidual (spec_mesh mesh, Vector* u)
+/// calculate rezidual in norm C and print report
+void rezidual (spec_mesh mesh, Vector* u, double cur_t)
 {
-  return;
+  int cell;
+  double x, y;
+  double rez_rho_c, rez_v1_c, rez_v2_c, cur_rho_c, cur_v1_c, cur_v2_c;
+  
+  rez_rho_c = rez_v1_c = rez_v2_c = 0.;
+  
+  for (cell = 0; cell < size (mesh); cell++)
+    {
+      x = get_x (mesh, cell);
+      y = get_y (mesh, cell);
+      
+      cur_rho_c = fabs (V_GetCmp (u, 3 * cell + 0) - debug_rho (cur_t, x, y));
+      cur_v1_c  = fabs (V_GetCmp (u, 3 * cell + 1) - debug_v1  (cur_t, x, y));
+      cur_v2_c  = fabs (V_GetCmp (u, 3 * cell + 2) - debug_v2  (cur_t, x, y));
+      
+      if (cur_rho_c - rez_rho_c > MINIMAL_FOR_COMPARE)
+        rez_rho_c = cur_rho_c;
+      if (cur_v1_c - rez_v1_c > MINIMAL_FOR_COMPARE)
+        rez_v1_c = cur_v1_c;
+      if (cur_v2_c - rez_v2_c > MINIMAL_FOR_COMPARE)
+        rez_v2_c = cur_v2_c;
+    }
+    
+  /// printf report
+  printf ("Rezidual in C:\n\tDensity\t\t%le\n\tVelosity by X\t%le\n\tVelosity by Y\t%le\n", rez_rho_c, rez_v1_c, rez_v2_c);
 }
 
 int main (int argc, char* argv[])
@@ -66,7 +91,10 @@ int main (int argc, char* argv[])
   
   spec_mesh mesh;
   create (&mesh, M1, M2);
+  
+  /// printf start report
   print_properties (mesh);
+  printf ("tau = %.3lf\n", tau);
   
   Vector u;
   V_Constr (&u, "u", 3 * size (mesh), Normal, True);
@@ -88,9 +116,9 @@ int main (int argc, char* argv[])
       /// solve Au = b
       BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
       
-      printf ("\nt = %.3lf\n", cur_T);
+      printf ("\nT = %.3lf\n", cur_T);
       /// calculate and print rezidual
-      rezidual (mesh, &u);
+      rezidual (mesh, &u, cur_T);
     }
   
   Q_Destr (&A);
