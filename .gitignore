@@ -13,5 +13,10 @@
 *.a
 
 # Trash
-task
 *~
+
+#Task
+task
+
+#Input files
+*.in
