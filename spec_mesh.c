@@ -23,7 +23,7 @@ void print_properties (spec_mesh mesh)
 }
 
 /// return number of cell neighbor to the top or -1 if this neighbor don't exist
-int up (spec_mesh mesh, int ind)
+int get_up (spec_mesh mesh, int ind)
 {
   int row, col;
   row = ind / (mesh.M1 + 1);
@@ -52,7 +52,7 @@ int up (spec_mesh mesh, int ind)
 }
 
 /// return number of cell neighbor to the top or -1 if this neighbor don't exist
-int down (spec_mesh mesh, int ind)
+int get_down (spec_mesh mesh, int ind)
 {
   int row, col;
   row = ind / (mesh.M1 + 1);
@@ -84,7 +84,7 @@ int down (spec_mesh mesh, int ind)
 }
 
 /// return number of cell neighbor to the left or -1 if this neighbor don't exist
-int left (spec_mesh mesh, int ind)
+int get_left (spec_mesh mesh, int ind)
 {
   int row, col;
   row = ind / (mesh.M1 + 1);
@@ -108,7 +108,7 @@ int left (spec_mesh mesh, int ind)
 }
 
 /// return number of cell neighbor to the right or -1 if this neighbor don't exist
-int right (spec_mesh mesh, int ind)
+int get_right (spec_mesh mesh, int ind)
 {
   int row, col;
   row = ind / (mesh.M1 + 1);
@@ -132,7 +132,7 @@ int right (spec_mesh mesh, int ind)
 }
 
 /// return x coordinate of cell
-double x (spec_mesh mesh, int ind)
+double get_x (spec_mesh mesh, int ind)
 {
   int row, col;
   row = ind / (mesh.M1 + 1);
@@ -150,7 +150,7 @@ double x (spec_mesh mesh, int ind)
 }
 
 /// return y coordinate of cell
-double y (spec_mesh mesh, int ind)
+double get_y (spec_mesh mesh, int ind)
 {
   int row;
   row = ind / (mesh.M1 + 1);

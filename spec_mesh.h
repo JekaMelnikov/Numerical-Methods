@@ -15,10 +15,10 @@ int boundary_size (spec_mesh mesh);
 
 void print_properties (spec_mesh mesh);
     
-int right (spec_mesh mesh, int ind);
-int left  (spec_mesh mesh, int ind);
-int up    (spec_mesh mesh, int ind);
-int down  (spec_mesh mesh, int ind);
+int get_right (spec_mesh mesh, int ind);
+int get_left  (spec_mesh mesh, int ind);
+int get_up    (spec_mesh mesh, int ind);
+int get_down  (spec_mesh mesh, int ind);
     
-double x (spec_mesh mesh, int ind);
-double y (spec_mesh mesh, int ind);
+double get_x (spec_mesh mesh, int ind);
+double get_y (spec_mesh mesh, int ind);
