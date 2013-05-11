@@ -16,27 +16,80 @@ void init (Vector *u, spec_mesh mesh)
     if (get_up (mesh, cell) == -1 || get_down (mesh, cell) == -1 || 
         get_right (mesh, cell) == -1 || get_left (mesh, cell) == -1)
       {
-        V_SetCmp (u, 3 * cell + 0, init_rho (get_x (mesh, cell), get_y (mesh, cell))); /// density
-        V_SetCmp (u, 3 * cell + 1, 0.0);                                               /// x velocity
-        V_SetCmp (u, 3 * cell + 2, 0.0);                                               /// y velocity
+        V_SetCmp (u, 3 * cell + 1, init_rho (get_x (mesh, cell), get_y (mesh, cell))); /// density
+        V_SetCmp (u, 3 * cell + 2, 0.0);                                               /// x velocity
+        V_SetCmp (u, 3 * cell + 3, 0.0);                                               /// y velocity
         
         if (DEBUG_PRINT)
           printf ("(%.3lf %.3lf) cell=%d\tu=%d\td=%d\tr=%d\tl=%d\n", get_x (mesh, cell), get_y (mesh, cell), cell, get_up (mesh, cell), get_down (mesh, cell), get_right (mesh, cell), get_left (mesh, cell));
       }
     else
       {
-        V_SetCmp (u, 3 * cell + 0, init_rho (get_x (mesh, cell), get_y (mesh, cell))); /// density
-        V_SetCmp (u, 3 * cell + 1, init_v1  (get_x (mesh, cell), get_y (mesh, cell))); /// x velocity
-        V_SetCmp (u, 3 * cell + 2, init_v2  (get_x (mesh, cell), get_y (mesh, cell))); /// y velocity
+        V_SetCmp (u, 3 * cell + 1, init_rho (get_x (mesh, cell), get_y (mesh, cell))); /// density
+        V_SetCmp (u, 3 * cell + 2, init_v1  (get_x (mesh, cell), get_y (mesh, cell))); /// x velocity
+        V_SetCmp (u, 3 * cell + 3, init_v2  (get_x (mesh, cell), get_y (mesh, cell))); /// y velocity
         
         if (DEBUG_PRINT)
           printf ("(%.3lf %.3lf) cell=%d\tu=%d\td=%d\tr=%d\tl=%d\n", get_x (mesh, cell), get_y (mesh, cell), cell, get_up (mesh, cell), get_down (mesh, cell), get_right (mesh, cell), get_left (mesh, cell));
       }
 }
 
-void create_system (spec_mesh mesh, Vector u, QMatrix *A, Vector *b)
+/// build matrix A and left part vector b for system Au = b
+void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur_t, double tau)
 {
-  return;
+  int cell, shift;
+  int neigh1, neigh2;
+  double coef;
+  
+  shift = 0;
+  for (cell = 0; cell < size (mesh); cell++)
+    if (get_up (mesh, cell) == -1) /// w2.2
+      {
+        neigh1 = get_down (mesh, cell);
+        neigh2 = get_down (mesh, neigh1);
+        
+        /// w2.2
+        /// fill matrix A
+        Q_SetLen (A, 3 * (cell + shift) + 1, 4);
+        /// rho
+        coef = (1 / tau) - ((0.5 * (V_GetCmp (u, 3 * cell + 3))) / (get_h2 (mesh)));
+        Q_SetEntry (A, 3 * (cell + shift) + 1, 0, 3 * cell + 1, coef);
+        /// v2
+        coef = - (V_GetCmp (u, 3 * cell + 1)) / (get_h2 (mesh));
+        Q_SetEntry (A, 3 * (cell + shift) + 1, 1, 3 * cell + 3, coef);
+        /// rho_m+1
+        coef = ((0.5 * (V_GetCmp (u, 3 * neigh1 + 3))) / (get_h2 (mesh)));
+        Q_SetEntry (A, 3 * (cell + shift) + 1, 2, 3 * neigh1 + 1, coef);
+        /// v2_m+1
+        coef = (V_GetCmp (u, 3 * cell + 1)) / (get_h2 (mesh));
+        Q_SetEntry (A, 3 * (cell + shift) + 1, 3, 3 * neigh1 + 3, coef);
+        
+        /// fill vector b
+        coef = V_GetCmp (u, 3 * cell + 1) / tau;
+        coef += (0.5 * V_GetCmp (u, 3 * cell + 1) * (V_GetCmp (u, 3 * neigh1 + 3) - V_GetCmp (u, 3 * cell + 3))) / (get_h2 (mesh));
+        coef += (V_GetCmp (u, 3 * neigh2 + 1) * V_GetCmp (u, 3 * neigh2 + 3) - 2 * V_GetCmp (u, 3 * neigh1 + 1) * V_GetCmp (u, 3 * neigh1 + 3) + V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 3)) / (4. * get_h2 (mesh));
+        coef += (V_GetCmp (u, 3 * cell + 1) * (V_GetCmp (u, 3 * neigh2 + 3) - 2 * V_GetCmp (u, 3 * neigh1 + 3) + V_GetCmp (u, 3 * cell + 3))) / (4. * get_h2 (mesh));
+        V_SetCmp (b, 3 * (cell + shift) + 1, coef);
+        
+        /// boundary conditions
+        Q_SetLen (A, 3 * (cell + shift) + 2, 1);
+        Q_SetEntry (A, 3 * (cell + shift) + 2, 0, 3 * cell + 2, 0.);
+        
+        Q_SetLen (A, 3 * (cell + shift) + 3, 1);
+        Q_SetEntry (A, 3 * (cell + shift) + 3, 0, 3 * cell + 3, 0.);
+      }
+    else if (get_down (mesh, cell) == -1) /// w3.2
+      {
+      }
+    else if (get_left (mesh, cell) == -1) /// w2.1
+      {
+      }
+    else if (get_right (mesh, cell) == -1) /// w3.1
+      {
+      }
+    else /// w1 w4 w5
+      {
+      }
 }
 
 /// calculate rezidual in norm C and L2 and print report
@@ -55,9 +108,9 @@ void rezidual (spec_mesh mesh, Vector* u, double cur_t)
       y = get_y (mesh, cell);
       
       /// calculate rezidual in norm C
-      cur_rho_c = fabs (V_GetCmp (u, 3 * cell + 0) - debug_rho (cur_t, x, y));
-      cur_v1_c  = fabs (V_GetCmp (u, 3 * cell + 1) - debug_v1  (cur_t, x, y));
-      cur_v2_c  = fabs (V_GetCmp (u, 3 * cell + 2) - debug_v2  (cur_t, x, y));
+      cur_rho_c = fabs (V_GetCmp (u, 3 * cell + 1) - debug_rho (cur_t, x, y));
+      cur_v1_c  = fabs (V_GetCmp (u, 3 * cell + 2) - debug_v1  (cur_t, x, y));
+      cur_v2_c  = fabs (V_GetCmp (u, 3 * cell + 3) - debug_v2  (cur_t, x, y));
       
       if (cur_rho_c - rez_rho_c > MINIMAL_FOR_COMPARE)
         rez_rho_c = cur_rho_c;
@@ -80,17 +133,17 @@ void rezidual (spec_mesh mesh, Vector* u, double cur_t)
           x2 = get_x (mesh, left);
           y2 = get_y (mesh, left);
           
-          rho_1 = V_GetCmp (u, 3 * up + 0) - debug_rho (cur_t, x1, y1);
-          v1_1  = V_GetCmp (u, 3 * up + 1) - debug_v1  (cur_t, x1, y1);
-          v2_1  = V_GetCmp (u, 3 * up + 2) - debug_v2  (cur_t, x1, y1);
+          rho_1 = V_GetCmp (u, 3 * up + 1) - debug_rho (cur_t, x1, y1);
+          v1_1  = V_GetCmp (u, 3 * up + 2) - debug_v1  (cur_t, x1, y1);
+          v2_1  = V_GetCmp (u, 3 * up + 3) - debug_v2  (cur_t, x1, y1);
           
           rho_1 *= rho_1;
           v1_1  *= v1_1;
           v2_1  *= v2_1;
           
-          rho_2 = V_GetCmp (u, 3 * left + 0) - debug_rho (cur_t, x2, y2);
-          v1_2  = V_GetCmp (u, 3 * left + 1) - debug_v1  (cur_t, x2, y2);
-          v2_2  = V_GetCmp (u, 3 * left + 2) - debug_v2  (cur_t, x2, y2);
+          rho_2 = V_GetCmp (u, 3 * left + 1) - debug_rho (cur_t, x2, y2);
+          v1_2  = V_GetCmp (u, 3 * left + 2) - debug_v1  (cur_t, x2, y2);
+          v2_2  = V_GetCmp (u, 3 * left + 3) - debug_v2  (cur_t, x2, y2);
           
           rho_2 *= rho_2;
           v1_2  *= v1_2;
@@ -108,25 +161,25 @@ void rezidual (spec_mesh mesh, Vector* u, double cur_t)
           x2 = get_x (mesh, right);
           y2 = get_y (mesh, right);
           
-          rho_1 = V_GetCmp (u, 3 * down + 0) - debug_rho (cur_t, x1, y1);
-          v1_1  = V_GetCmp (u, 3 * down + 1) - debug_v1  (cur_t, x1, y1);
-          v2_1  = V_GetCmp (u, 3 * down + 2) - debug_v2  (cur_t, x1, y1);
+          rho_1 = V_GetCmp (u, 3 * down + 1) - debug_rho (cur_t, x1, y1);
+          v1_1  = V_GetCmp (u, 3 * down + 2) - debug_v1  (cur_t, x1, y1);
+          v2_1  = V_GetCmp (u, 3 * down + 3) - debug_v2  (cur_t, x1, y1);
           
           rho_1 *= rho_1;
           v1_1  *= v1_1;
           v2_1  *= v2_1;
           
-          rho_2 = V_GetCmp (u, 3 * right + 0) - debug_rho (cur_t, x2, y2);
-          v1_2  = V_GetCmp (u, 3 * right + 1) - debug_v1  (cur_t, x2, y2);
-          v2_2  = V_GetCmp (u, 3 * right + 2) - debug_v2  (cur_t, x2, y2);
+          rho_2 = V_GetCmp (u, 3 * right + 1) - debug_rho (cur_t, x2, y2);
+          v1_2  = V_GetCmp (u, 3 * right + 2) - debug_v1  (cur_t, x2, y2);
+          v2_2  = V_GetCmp (u, 3 * right + 3) - debug_v2  (cur_t, x2, y2);
           
           rho_2 *= rho_2;
           v1_2  *= v1_2;
           v2_2  *= v2_2;
           
-          rez_rho_l2 += sqrt ((2 * get_h1 (mesh) * get_h2 (mesh) * (rho_1 + rho_2 + cur_rho_c * cur_rho_c)) / 3.);
-          rez_v1_l2  += sqrt ((2 * get_h1 (mesh) * get_h2 (mesh) * (v1_1  + v1_2  + cur_v1_c  * cur_v1_c )) / 3.);
-          rez_v2_l2  += sqrt ((2 * get_h1 (mesh) * get_h2 (mesh) * (v2_1  + v2_2  + cur_v2_c  * cur_v2_c )) / 3.);
+          rez_rho_l2 += sqrt ((get_h1 (mesh) * get_h2 (mesh) * (rho_1 + rho_2 + cur_rho_c * cur_rho_c)) / 6.);
+          rez_v1_l2  += sqrt ((get_h1 (mesh) * get_h2 (mesh) * (v1_1  + v1_2  + cur_v1_c  * cur_v1_c )) / 6.);
+          rez_v2_l2  += sqrt ((get_h1 (mesh) * get_h2 (mesh) * (v2_1  + v2_2  + cur_v2_c  * cur_v2_c )) / 6.);
         }
     }
     
@@ -177,10 +230,10 @@ int main (int argc, char* argv[])
       cur_T += tau;
       
       /// fill matrix A and vector b
-      create_system (mesh, u, &A, &b);
+      create_system (mesh, &u, &A, &b, cur_T, tau);
       
       /// solve Au = b
-      BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
+      //BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
       
       printf ("\nT = %.3lf\n", cur_T);
       /// calculate and print rezidual
