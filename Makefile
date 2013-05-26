@@ -51,7 +51,7 @@ LIBS		=
 
 EXTLIBS		= -llaspack -lxc
 
-COMPFLAGS	=  
+COMPFLAGS	= -g
 
 # compiler options will be passed throuth enviroment variables
 #CFLAGS		=
