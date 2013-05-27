@@ -41,7 +41,7 @@ double init_v2 (double x, double y)
   return debug_v2 (0, x, y);
 }
 
-double calc_f1 (double t, double x1, double x2, double x3)
+double calc_f1 (double t, double x1, double x2)
 {
   return
   exp(-t - x1 + x2)*(exp(t + x1 - x2)*(PP - SQR(((1 - x1))*SQR((x1 - 0.6))*SQR((x1 - 0.4))*SQR(x1)*SQR((1 - x2))*SQR((x2 - 0.25))*SQR(x2))/(double)(3*exp(2*t))) +
@@ -67,7 +67,7 @@ double calc_f1 (double t, double x1, double x2, double x3)
   ;
 }
 
-double calc_f2 (double t, double x1, double x2, double x3)
+double calc_f2 (double t, double x1, double x2)
 {
   return
   exp(-t - x1 + x2)*((-exp(t + x1 - x2))*(PP - ((1/(double)3)*SQR((1 - x1))*SQR((-0.6 + x1))*SQR((-0.4 + x1))*SQR(x1)*SQR((1 - x2))*SQR((-0.25 + x2))*SQR(x2))/(double)exp(2*t)) +

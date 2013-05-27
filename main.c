@@ -38,7 +38,7 @@ void init (Vector *u, spec_mesh mesh)
 void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur_t, double tau)
 {
   int cell;
-  int neigh1, neigh2;
+  int neigh1, neigh2, neigh3, neigh4, neigh13, neigh14, neigh23, neigh24;
   double coef;
   
   for (cell = 0; cell < size (mesh); cell++)
@@ -79,7 +79,7 @@ void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur
         Q_SetEntry (A, 3 * cell + 3, 0, 3 * cell + 3, 1.);
         V_SetCmp (b, 3 * cell + 3, 0.);
       }
-    else if (get_down (mesh, cell) == -1) /// w3.2
+    else if (get_down (mesh, cell) == -1 || get_down (mesh, get_left (mesh, cell)) == -1 || get_down (mesh, get_right (mesh, cell)) == -1) /// w3.2
       {
         neigh1 = get_up (mesh, cell);
         neigh2 = get_up (mesh, neigh1);
@@ -192,6 +192,49 @@ void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur
       }
     else /// w1 w4 w5
       {
+        neigh1 = get_up    (mesh, cell);
+        neigh2 = get_down  (mesh, cell);
+        neigh3 = get_left  (mesh, cell);
+        neigh4 = get_right (mesh, cell);
+        
+        neigh13 = get_left  (mesh, neigh1);
+        neigh14 = get_right (mesh, neigh1);
+        neigh23 = get_left  (mesh, neigh2);
+        neigh24 = get_right (mesh, neigh2);
+        
+        /// w4
+        /// fill matrix A
+        Q_SetLen (A, 3 * cell + 1, 7);
+        /// v
+        coef = V_GetCmp (u, 3 * cell + 1) / tau + (8. * VISC) / (3. * get_h1 (mesh)) + (2. * VISC) / (get_h2 (mesh));
+        Q_SetEntry (A, 3 * cell + 1, 0, 3 * cell + 2, coef);
+        /// v_n+1
+        coef = (1. /(3. * get_h1 (mesh))) * (0.5 * V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 2) + 0.5 * V_GetCmp (u, 3 * neigh4 + 1) * V_GetCmp (u, 3 * neigh4 + 2) - 4. * VISC / get_h1 (mesh));
+        Q_SetEntry (A, 3 * cell + 1, 1, 3 * neigh4 + 2, coef);
+        /// v_n-1
+        coef = (1. /(3. * get_h1 (mesh))) * (0.5 * V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 2) + 0.5 * V_GetCmp (u, 3 * neigh3 + 1) * V_GetCmp (u, 3 * neigh3 + 2) + 4. * VISC / get_h1 (mesh));
+        Q_SetEntry (A, 3 * cell + 1, 2, 3 * neigh3 + 2, -coef);
+        /// v_m+1
+        coef = (1. / get_h2 (mesh)) * (0.25 * V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 3) + 0.25 * V_GetCmp (u, 3 * neigh1 + 1) * V_GetCmp (u, 3 * neigh1 + 3) - VISC / get_h2 (mesh));
+        Q_SetEntry (A, 3 * cell + 1, 3, 3 * neigh1 + 2, coef);
+        /// v_m-1
+        coef = (1. / get_h2 (mesh)) * (0.25 * V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 3) + 0.25 * V_GetCmp (u, 3 * neigh2 + 1) * V_GetCmp (u, 3 * neigh2 + 3) + VISC / get_h2 (mesh));
+        Q_SetEntry (A, 3 * cell + 1, 4, 3 * neigh2 + 2, -coef);
+        /// p_n+1
+        coef = (0.5 * PP) / get_h1 (mesh);
+        Q_SetEntry (A, 3 * cell + 1, 5, 3 * neigh4 + 1, coef);
+        /// p_n-1
+        coef = (0.5 * PP) / get_h1 (mesh);
+        Q_SetEntry (A, 3 * cell + 1, 6, 3 * neigh3 + 1, -coef);
+        
+        /// fill vector b
+        coef = (V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 2)) / tau;
+        coef += (0.25 * V_GetCmp (u, 3 * cell + 2) * V_GetCmp (u, 3 * cell + 3) * (V_GetCmp (u, 3 * neigh3 + 1) - V_GetCmp (u, 3 * neigh4 + 1))) / get_h1 (mesh);
+        coef += (0.25 * V_GetCmp (u, 3 * cell + 1) * V_GetCmp (u, 3 * cell + 2) * (V_GetCmp (u, 3 * neigh1 + 3) - V_GetCmp (u, 3 * neigh2 + 3))) / get_h2 (mesh);
+        coef += (0.5 * V_GetCmp (u, 3 * cell + 2) * V_GetCmp (u, 3 * cell + 2) * (V_GetCmp (u, 3 * neigh3 + 1) - V_GetCmp (u, 3 * neigh4 + 1))) / (3. * get_h1 (mesh));
+        coef += (VISC * (V_GetCmp (u, 3 * neigh24 + 3) - V_GetCmp (u, 3 * neigh23 + 3) + V_GetCmp (u, 3 * neigh14 + 3) - V_GetCmp (u, 3 * neigh13 + 3))) / (4. * get_h1 (mesh) * get_h2 (mesh));
+        coef += V_GetCmp (u, 3 * cell + 1) * calc_f1 (cur_t, get_x (mesh, cell), get_y (mesh, cell));
+        V_SetCmp (b, 3 * cell + 1, coef);
       }
 }
 
