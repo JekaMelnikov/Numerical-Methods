@@ -36,6 +36,10 @@ void print_properties (spec_mesh mesh)
 int get_up (spec_mesh mesh, int ind)
 {
   int row, col;
+  
+  if (ind < 0 || ind >= size (mesh))
+    return -1;
+  
   row = ind / (mesh.M1 + 1);
   
   if (row > mesh.M2 - mesh.M2/4)
@@ -65,6 +69,10 @@ int get_up (spec_mesh mesh, int ind)
 int get_down (spec_mesh mesh, int ind)
 {
   int row, col;
+  
+  if (ind < 0 || ind >= size (mesh))
+    return -1;
+  
   row = ind / (mesh.M1 + 1);
   
   if (row > mesh.M2 - mesh.M2 / 4)
@@ -97,6 +105,10 @@ int get_down (spec_mesh mesh, int ind)
 int get_left (spec_mesh mesh, int ind)
 {
   int row, col;
+  
+  if (ind < 0 || ind >= size (mesh))
+    return -1;
+  
   row = ind / (mesh.M1 + 1);
   
   if (row > mesh.M2 - mesh.M2 / 4)
@@ -121,6 +133,10 @@ int get_left (spec_mesh mesh, int ind)
 int get_right (spec_mesh mesh, int ind)
 {
   int row, col;
+  
+  if (ind < 0 || ind >= size (mesh))
+    return -1;
+  
   row = ind / (mesh.M1 + 1);
   
   if (row > mesh.M2 - mesh.M2 / 4)
