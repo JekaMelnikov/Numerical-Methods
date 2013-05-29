@@ -8,6 +8,7 @@
 #include "defs.h"
 
 #define DEBUG_PRINT 0
+#define FULL_OUTPUT 0
 
 void init (Vector *u, spec_mesh mesh)
 {
@@ -269,6 +270,43 @@ void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur
         coef += (VISC * (V_GetCmp (u, 3 * neigh24 + 2) - V_GetCmp (u, 3 * neigh23 + 2) - V_GetCmp (u, 3 * neigh14 + 2) + V_GetCmp (u, 3 * neigh13 + 2))) / (4. * get_h1 (mesh) * get_h2 (mesh));
         coef += V_GetCmp (u, 3 * cell + 1) * calc_f2 (cur_t, get_x (mesh, cell), get_y (mesh, cell));
         V_SetCmp (b, 3 * cell + 2, coef);
+        
+        /// w1
+        /// fill matrix A
+        Q_SetLen (A, 3 * cell + 3, 9);
+        /// p
+        coef = PP * 4. * get_h1 (mesh) * get_h2 (mesh);
+        Q_SetEntry (A, 3 * cell + 3, 0, 3 * cell + 1, coef);
+        /// p_n+1
+        coef = PP * tau * get_h2 (mesh) * (V_GetCmp (u, 3 * cell + 2) + V_GetCmp (u, 3 * neigh4 + 2));
+        Q_SetEntry (A, 3 * cell + 3, 1, 3 * neigh4 + 1, coef);
+        /// p_n-1
+        coef = PP * tau * get_h2 (mesh) * (V_GetCmp (u, 3 * cell + 2) + V_GetCmp (u, 3 * neigh3 + 2));
+        Q_SetEntry (A, 3 * cell + 3, 2, 3 * neigh3 + 1, -coef);
+        /// p_m+1
+        coef = PP * tau * get_h1 (mesh) * (V_GetCmp (u, 3 * cell + 3) + V_GetCmp (u, 3 * neigh2 + 3));
+        Q_SetEntry (A, 3 * cell + 3, 3, 3 * neigh2 + 1, coef);
+        /// p_m-1
+        coef = PP * tau * get_h1 (mesh) * (V_GetCmp (u, 3 * cell + 3) + V_GetCmp (u, 3 * neigh1 + 3));
+        Q_SetEntry (A, 3 * cell + 3, 4, 3 * neigh1 + 1, -coef);
+        /// v_n+1
+        coef = 2. * tau * get_h2 (mesh) * PP * V_GetCmp (u, 3 * cell + 1);
+        Q_SetEntry (A, 3 * cell + 3, 5, 3 * neigh4 + 2, coef);
+        /// v_n-1
+        coef = 2. * tau * get_h2 (mesh) * PP * V_GetCmp (u, 3 * cell + 1);
+        Q_SetEntry (A, 3 * cell + 3, 6, 3 * neigh3 + 2, -coef);
+        /// w_m+1
+        coef = 2. * tau * get_h1 (mesh);
+        Q_SetEntry (A, 3 * cell + 3, 7, 3 * neigh2 + 3, coef);
+        /// w_m-1
+        coef = 2. * tau * get_h1 (mesh);
+        Q_SetEntry (A, 3 * cell + 3, 8, 3 * neigh2 + 3, -coef);
+        
+        /// fill vector b
+        coef = 4. * V_GetCmp (u, 3 * cell + 1) * get_h1 (mesh) * get_h2 (mesh);
+        coef += tau * get_h2 (mesh) * V_GetCmp (u, 3 * cell + 1) * (V_GetCmp (u, 3 * neigh4 + 2) - V_GetCmp (u, 3 * neigh3 + 2));
+        coef += tau * get_h1 (mesh) * V_GetCmp (u, 3 * cell + 1) * (V_GetCmp (u, 3 * neigh4 + 3) - V_GetCmp (u, 3 * neigh3 + 3));
+        V_SetCmp (b, 3 * cell + 3, coef);
       }
 }
 
@@ -413,12 +451,18 @@ int main (int argc, char* argv[])
       create_system (mesh, &u, &A, &b, cur_T, tau);
       
       /// solve Au = b
-      //BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
+      BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
       
-      printf ("\nT = %.3lf\n", cur_T);
-      /// calculate and print rezidual
-      rezidual (mesh, &u, cur_T);
+      if (FULL_OUTPUT)
+        {
+          printf ("\nT = %.3lf\n", cur_T);
+          /// calculate and print rezidual
+          rezidual (mesh, &u, cur_T);
+        }
     }
+  
+  printf ("Finaly rezult\n");
+  rezidual (mesh, &u, cur_T);
   
   Q_Destr (&A);
   V_Destr (&u);
