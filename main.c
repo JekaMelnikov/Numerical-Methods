@@ -3,13 +3,14 @@
 #include <laspack/vector.h>
 #include <laspack/qmatrix.h>
 #include <laspack/itersolv.h>
+#include <laspack/operats.h>
 
 #include "spec_mesh.h"
 #include "defs.h"
 
-#define DEBUG_PRINT 1
+#define DEBUG_PRINT 300
 #define FULL_OUTPUT 1
-#define SOLVER      1
+#define SOLVER      2
 
 void print_vector (Vector *v);
 
@@ -36,9 +37,9 @@ int main (int argc, char* argv[])
       return -2;
     }
   
-  int M1, M2, T;
-  double tau;
-  fscanf (file, "%d%d%d%lf", &M1, &M2, &T, &tau);
+  int M1, M2;
+  double T, tau;
+  fscanf (file, "%d%d%lf%lf", &M1, &M2, &T, &tau);
   fclose (file);
   
   spec_mesh mesh;
@@ -57,6 +58,7 @@ int main (int argc, char* argv[])
   Vector b;
   V_Constr (&b, "b", 3 * size (mesh), Normal, True);
   
+  
   double cur_T = 0.0;
   while (T - cur_T > MINIMAL_FOR_COMPARE) /// main loop
     {
@@ -68,7 +70,7 @@ int main (int argc, char* argv[])
         }
       
       
-      if (DEBUG_PRINT)
+      if (DEBUG_PRINT == 100)
         {
           printf ("b = ");
           print_vector (&b);
@@ -80,7 +82,7 @@ int main (int argc, char* argv[])
       /// fill matrix A and vector b
       create_system (mesh, &u, &A, &b, cur_T, tau);
 
-      if (DEBUG_PRINT)
+      if (DEBUG_PRINT == 100)
         {
           printf ("b = ");
           print_vector (&b);
@@ -92,12 +94,31 @@ int main (int argc, char* argv[])
         }
       
       /// solve Au = b
+      SetRTCAccuracy (1e-16);
       if (SOLVER == 1)
         BiCGSTABIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
       if (SOLVER == 2)
         BiCGIter (&A, &u, &b, MAX_ITER, NULL, 1.2);
       
-      if (DEBUG_PRINT)
+      if (DEBUG_PRINT == 300)
+        {
+          Vector *b1;
+          b1 = Mul_QV (&A, &u);
+          int it;
+          double norm_c, norm_l1, cur;
+          norm_c = norm_l1 = 0.;
+          
+          for (it = 1; it <= 3 * size (mesh); it++)
+            {
+              cur = fabs (V__GetCmp (b1, it) - V__GetCmp (&b, it));
+              if (cur > norm_c)
+                norm_c = cur;
+              norm_l1 += cur;
+            }
+          printf ("err_c = %le\nerr_l1 = %le\n", norm_c, norm_l1);
+        }      
+      
+      if (DEBUG_PRINT == 100)
         {
           printf ("u = ");
           print_vector (&u);
