@@ -1,3 +1,4 @@
+///* DEBUG VERSION *///
 #include <stdio.h>
 
 #include <laspack/vector.h>
