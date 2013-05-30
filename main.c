@@ -396,11 +396,11 @@ void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur
         coef = PP * tau * get_h2 (mesh) * (V__GetCmp (u, 3 * cell + 2) + V__GetCmp (u, 3 * neigh3 + 2));
         Q__SetEntry (A, 3 * cell + 3, 2, 3 * neigh3 + 1, -coef);
         /// p_m+1
-        coef = PP * tau * get_h1 (mesh) * (V__GetCmp (u, 3 * cell + 3) + V__GetCmp (u, 3 * neigh2 + 3));
-        Q__SetEntry (A, 3 * cell + 3, 3, 3 * neigh2 + 1, coef);
-        /// p_m-1
         coef = PP * tau * get_h1 (mesh) * (V__GetCmp (u, 3 * cell + 3) + V__GetCmp (u, 3 * neigh1 + 3));
-        Q__SetEntry (A, 3 * cell + 3, 4, 3 * neigh1 + 1, -coef);
+        Q__SetEntry (A, 3 * cell + 3, 3, 3 * neigh1 + 1, coef);
+        /// p_m-1
+        coef = PP * tau * get_h1 (mesh) * (V__GetCmp (u, 3 * cell + 3) + V__GetCmp (u, 3 * neigh2 + 3));
+        Q__SetEntry (A, 3 * cell + 3, 4, 3 * neigh2 + 1, -coef);
         /// v_n+1
         coef = 2. * tau * get_h2 (mesh) * PP * V__GetCmp (u, 3 * cell + 1);
         Q__SetEntry (A, 3 * cell + 3, 5, 3 * neigh4 + 2, coef);
@@ -409,7 +409,7 @@ void create_system (spec_mesh mesh, Vector *u, QMatrix *A, Vector *b, double cur
         Q__SetEntry (A, 3 * cell + 3, 6, 3 * neigh3 + 2, -coef);
         /// w_m+1
         coef = 2. * tau * get_h1 (mesh);
-        Q__SetEntry (A, 3 * cell + 3, 7, 3 * neigh2 + 3, coef);
+        Q__SetEntry (A, 3 * cell + 3, 7, 3 * neigh1 + 3, coef);
         /// w_m-1
         coef = 2. * tau * get_h1 (mesh);
         Q__SetEntry (A, 3 * cell + 3, 8, 3 * neigh2 + 3, -coef);
