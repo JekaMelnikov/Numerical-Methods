@@ -8,8 +8,8 @@
 #include "spec_mesh.h"
 #include "defs.h"
 
-#define DEBUG_PRINT 300
-#define FULL_OUTPUT 1
+#define DEBUG_PRINT 0
+#define FULL_OUTPUT 0
 #define SOLVER      2
 
 void print_vector (Vector *v);
@@ -501,9 +501,9 @@ void rezidual (spec_mesh mesh, Vector* u, double cur_t)
           v1_2  *= v1_2;
           v2_2  *= v2_2;
           
-          rez_rho_l2 += sqrt ((2 * get_h1 (mesh) * get_h2 (mesh) * (rho_1 + rho_2 + cur_rho_c * cur_rho_c)) / 3.);
-          rez_v1_l2  += sqrt ((2 * get_h1 (mesh) * get_h2 (mesh) * (v1_1  + v1_2  + cur_v1_c  * cur_v1_c )) / 3.);
-          rez_v2_l2  += sqrt ((2 * get_h1 (mesh) * get_h2 (mesh) * (v2_1  + v2_2  + cur_v2_c  * cur_v2_c )) / 3.);
+          rez_rho_l2 += sqrt ((get_h1 (mesh) * get_h2 (mesh) * (rho_1 + rho_2 + cur_rho_c * cur_rho_c)) / 6.);
+          rez_v1_l2  += sqrt ((get_h1 (mesh) * get_h2 (mesh) * (v1_1  + v1_2  + cur_v1_c  * cur_v1_c )) / 6.);
+          rez_v2_l2  += sqrt ((get_h1 (mesh) * get_h2 (mesh) * (v2_1  + v2_2  + cur_v2_c  * cur_v2_c )) / 6.);
         }
       if (down != -1 && right != -1)
         {
